@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 # vim: ts=4
 ###
@@ -19,21 +20,24 @@
 #
 ###
 
-
 import sys
 import logging
 from logging.handlers import TimedRotatingFileHandler
 from logging import FileHandler
 import subprocess
 from urllib import unquote
-
 from bird import BirdSocket
-
 from flask import Flask, request, abort
+import argparse
+
+parser = argparse.ArgumentParser(description='bird looking glass')
+parser.add_argument('--config', help='load the config file', default='lgproxy.cfg')
+
+args = parser.parse_args()
 
 app = Flask(__name__)
+app.config.from_pyfile(args.config)
 app.debug = app.config["DEBUG"]
-app.config.from_pyfile('lgproxy.cfg')
 
 file_handler = TimedRotatingFileHandler(filename=app.config["LOG_FILE"], when="midnight") 
 app.logger.setLevel(getattr(logging, app.config["LOG_LEVEL"].upper()))
@@ -49,7 +53,7 @@ def access_log_after(response, *args, **kwargs):
     return response
 
 def check_accesslist():
-    if  app.config["ACCESS_LIST"] and request.remote_addr not in app.config["ACCESS_LIST"]:
+    if app.config["ACCESS_LIST"] and request.remote_addr not in app.config["ACCESS_LIST"]:
         abort(401)
 
 @app.route("/traceroute")
@@ -90,7 +94,6 @@ def traceroute():
     return result
 
 
-
 @app.route("/bird")
 @app.route("/bird6")
 def bird():
@@ -107,7 +110,7 @@ def bird():
     b.close()
     # FIXME: use status
     return result
-	
+
 
 if __name__ == "__main__":
     app.logger.info("lgproxy start")

@@ -31,16 +31,18 @@ from urllib2 import urlopen
 from urllib import quote, unquote
 import json
 import random
-
 from toolbox import mask_is_valid, ipv6_is_valid, ipv4_is_valid, resolve, save_cache_pickle, load_cache_pickle, unescape
-#from xml.sax.saxutils import escape
-
-
 import pydot
 from flask import Flask, render_template, jsonify, redirect, session, request, abort, Response, Markup
+import argparse
+
+parser = argparse.ArgumentParser(description='bird looking glass')
+parser.add_argument('--config', help='load the config file', default='lg.cfg')
+
+args = parser.parse_args()
 
 app = Flask(__name__)
-app.config.from_pyfile('lg.cfg')
+app.config.from_pyfile(args.config)
 app.secret_key = app.config["SESSION_KEY"]
 app.debug = app.config["DEBUG"]
 
